@@ -1,0 +1,37 @@
+{
+  "python_version": "3.13",
+  "dockerfile_lines": [],
+  "dependencies": [
+    "./"
+  ],
+  "graphs": {
+    "assistant": "./graph_src_v2/agents/assistant_agent/graph.py:graph",
+    "assistant_entrypoint": "./graph_src_v2/agents/assistant_agent/graph_entrypoint.py:make_graph",
+    "assistant_entrypoint_light_factory": "./graph_src_v2/agents/assistant_agent/graph_entrypoint_light_factory.py:make_graph",
+    "assistant1": "./graph_src_v2/agents/assistant_agent_v1/graph.py:graph",
+    "customer_support_handoffs_demo": "./graph_src_v2/agents/customer_support_agent/graph.py:graph",
+    "deepagents_data_analysis_demo": "./graph_src_v2/agents/deepagents_data_analysis_agent/graph.py:graph",
+    "deepagent_demo": "./graph_src_v2/agents/deepagent_agent/graph.py:graph",
+    "no_nested_ainvoke_demo": "./graph_src_v2/agents/no_nested_ainvoke_demo/graph.py:graph",
+    "personal_assistant_demo": "./graph_src_v2/agents/personal_assistant_agent/graph.py:graph",
+    "router_knowledge_base_demo": "./graph_src_v2/agents/router_knowledge_base_agent/graph.py:graph",
+    "skills_sql_assistant_demo": "./graph_src_v2/agents/skills_sql_assistant_agent/graph.py:graph"
+  },
+  "http": {
+    "app": "./graph_src_v2/custom_routes/app.py:app",
+    "cors": {
+      "allow_origins": [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://localhost",
+        "http://127.0.0.1"
+      ],
+      "allow_methods": ["*"],
+      "allow_headers": ["*"],
+      "allow_credentials": false
+    }
+  },
+  "env": "./graph_src_v2/.env"
+}
