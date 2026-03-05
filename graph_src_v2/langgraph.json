@@ -5,17 +5,34 @@
     "./"
   ],
   "graphs": {
-    "assistant": "./graph_src_v2/agents/assistant_agent/graph.py:graph",
-    "assistant_entrypoint": "./graph_src_v2/agents/assistant_agent/graph_entrypoint.py:make_graph",
-    "assistant_entrypoint_light_factory": "./graph_src_v2/agents/assistant_agent/graph_entrypoint_light_factory.py:make_graph",
-    "assistant1": "./graph_src_v2/agents/assistant_agent_v1/graph.py:graph",
-    "customer_support_handoffs_demo": "./graph_src_v2/agents/customer_support_agent/graph.py:graph",
-    "deepagents_data_analysis_demo": "./graph_src_v2/agents/deepagents_data_analysis_agent/graph.py:graph",
-    "deepagent_demo": "./graph_src_v2/agents/deepagent_agent/graph.py:graph",
-    "no_nested_ainvoke_demo": "./graph_src_v2/agents/no_nested_ainvoke_demo/graph.py:graph",
-    "personal_assistant_demo": "./graph_src_v2/agents/personal_assistant_agent/graph.py:graph",
-    "router_knowledge_base_demo": "./graph_src_v2/agents/router_knowledge_base_agent/graph.py:graph",
-    "skills_sql_assistant_demo": "./graph_src_v2/agents/skills_sql_assistant_agent/graph.py:graph"
+    "assistant": {
+      "path": "./graph_src_v2/agents/assistant_agent/graph.py:graph",
+      "description": "默认助手主入口：create_agent + 运行时动态工具装配，适合作为通用对话与工具调用入口。"
+    },
+    "assistant_entrypoint": {
+      "path": "./graph_src_v2/agents/assistant_agent/graph_entrypoint.py:make_graph",
+      "description": "assistant 的 HITL 入口变体：内置 HumanInTheLoopMiddleware，演示高影响动作审批流程。"
+    },
+    "customer_support_handoffs_demo": {
+      "path": "./graph_src_v2/agents/customer_support_agent/graph.py:graph",
+      "description": "客服交接演示：通过状态机步骤（保修收集→问题分类→方案处理）驱动 handoff 流程。"
+    },
+    "deepagent_demo": {
+      "path": "./graph_src_v2/agents/deepagent_agent/graph.py:graph",
+      "description": "deepagent 统一入口：包含 subagents + skills 的深度任务分解执行，并合并了本地数据分析产物工作流能力。"
+    },
+    "personal_assistant_demo": {
+      "path": "./graph_src_v2/agents/personal_assistant_agent/graph.py:graph",
+      "description": "个人助理演示：calendar/email 子代理协同，由 supervisor 统一调度。"
+    },
+    "router_knowledge_base_demo": {
+      "path": "./graph_src_v2/agents/router_knowledge_base_agent/graph.py:graph",
+      "description": "知识库路由演示：按查询分类并行调用 GitHub/Notion/Slack 专家后综合回答。"
+    },
+    "skills_sql_assistant_demo": {
+      "path": "./graph_src_v2/agents/skills_sql_assistant_agent/graph.py:graph",
+      "description": "SQL 技能助手演示：middleware 注入技能目录，按需 load_skill 加载 schema 与业务规则。"
+    }
   },
   "http": {
     "app": "./graph_src_v2/custom_routes/app.py:app",

@@ -72,7 +72,10 @@ graph = make_graph
 在 `graph_src_v2/langgraph.json` 的 `graphs` 中新增：
 
 ```json
-"hello_demo": "./graph_src_v2/agents/hello_demo_agent/graph.py:graph"
+"hello_demo": {
+  "path": "./graph_src_v2/agents/hello_demo_agent/graph.py:graph",
+  "description": "hello_demo 的用途说明，便于在 assistants/search 中直接查看"
+}
 ```
 
 ## 3) 最小测试文件

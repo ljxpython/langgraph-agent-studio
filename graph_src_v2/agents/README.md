@@ -60,6 +60,7 @@ agents/<your_agent>/
 1. `graph_src_v2/langgraph.json`
    - 在 `graphs` 增加 `<graph_id>: ./graph_src_v2/agents/<agent>/graph.py:graph`
    - 或直接导出 `make_graph` 并用 `:make_graph`
+   - 如需在 `langgraph dev` 的 assistants 查询中显示说明，可用对象形式：`"<graph_id>": {"path": "...:graph", "description": "..."}`
 2. `graph_src_v2/agents/__init__.py`
    - 增加导入和 `__all__` 导出
 3. `graph_src_v2/docs/README.md`

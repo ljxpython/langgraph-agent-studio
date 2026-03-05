@@ -4,7 +4,7 @@
 
 ## 1) 先理解这套最小心智模型
 
-- 图入口：`assistant`、`deepagent_demo`、`deepagents_data_analysis_demo`、`graph_patterns_memory_demo`、`personal_assistant_demo`、`customer_support_handoffs_demo`、`router_knowledge_base_demo`、`skills_sql_assistant_demo`
+- 图入口：`assistant`、`assistant_entrypoint`、`deepagent_demo`、`graph_patterns_memory_demo`、`personal_assistant_demo`、`customer_support_handoffs_demo`、`router_knowledge_base_demo`、`skills_sql_assistant_demo`
 - 运行时配置：`runtime/options.py`（模型、工具、MCP 开关与参数）
 - 模型装配：`runtime/modeling.py`
 - 工具装配：`tools/registry.py`
@@ -25,6 +25,16 @@ uv run langgraph dev --config graph_src_v2/langgraph.json --port 8123 --no-brows
 - `langgraph.json` 本地模式不启用 auth
 - 默认不启用本地 tools（`enable_local_tools=false`）
 - 默认不启用 MCP（`enable_local_mcp=false`）
+
+### 2.0 查看 graph 详细说明（来自 `langgraph.json` 的 `graphs[*].description`）
+
+服务启动后可直接查询：
+
+```bash
+curl -sS -X POST http://127.0.0.1:8123/assistants/search -H "Content-Type: application/json" -d '{}'
+```
+
+返回中每个 assistant 都包含 `description` 字段；该字段来源于 `langgraph.json` 中对应 graph 的 `description`。
 
 补充阅读：
 
@@ -57,11 +67,11 @@ uv run langgraph dev --config graph_src_v2/langgraph.json --port 8123 --no-brows
 - 核心机制：通过 middleware 暴露 skills 摘要，按需用 `load_skill` 加载详细 schema/业务规则
 - 目标：减少上下文冗余（progressive disclosure），保持单 agent 对话体验
 
-### 2.5 deepagents_data_analysis_demo 是什么
+### 2.5 deepagent_demo（已并入数据分析能力）
 
-- 迁移自 LangChain 官方 `deepagents/data-analysis` 示例
-- 核心能力：读取本地数据文件、执行分析脚本、生成可视化产物并在最终回复中回报产物路径
-- 按你的要求移除了 Slack 交付流程，仅保留本地产物工作流
+- 统一保留 `deepagent_demo`，移除单独的 `deepagents_data_analysis_demo` 教学变体
+- 既支持通用 deep task 分解，也支持本地 CSV 分析、脚本化处理、可视化产物输出
+- 默认不使用 Slack 或任何聊天投递集成，仅回报本地产物路径
 
 ### 2.6 assistant（LangChain 概念教学模式）
 
