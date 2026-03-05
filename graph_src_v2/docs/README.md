@@ -9,7 +9,7 @@
 - 模型装配：`runtime/modeling.py`
 - 工具装配：`tools/registry.py`
 - MCP 清单：`mcp/servers.py`
-- 自定义路由：`custom_routes/app.py` + `custom_routes/tools.py`
+- 自定义路由：`custom_routes/app.py` + `custom_routes/tools.py` + `custom_routes/models.py`
 - 鉴权：`auth/provider.py`（`custom_auth` + `oauth_auth`）
 
 ## 2) 本地启动（推荐）
@@ -23,8 +23,8 @@ uv run langgraph dev --config graph_src_v2/langgraph.json --port 8123 --no-brows
 默认行为：
 
 - `langgraph.json` 本地模式不启用 auth
-- 默认不启用本地 tools（`enable_local_tools=false`）
-- 默认不启用 MCP（`enable_local_mcp=false`）
+- 默认不启用公共工具池（`enable_tools=false`）
+- 开启后可通过 `tools` 选择一个、多个或全部工具（本地工具 + MCP server 能力）
 
 ### 2.0 查看 graph 详细说明（来自 `langgraph.json` 的 `graphs[*].description`）
 
@@ -162,8 +162,7 @@ uv run pytest graph_src_v2/tests/test_auth_core.py graph_src_v2/tests/test_custo
 
 ```bash
 curl -sS http://127.0.0.1:8123/internal/capabilities/tools
-curl -sS http://127.0.0.1:8123/internal/capabilities/mcp-servers
-curl -sS -X POST http://127.0.0.1:8123/internal/capabilities/resolve -H "Content-Type: application/json" -d '{"enable_local_tools":true,"local_tools":["word_count"]}'
+curl -sS http://127.0.0.1:8123/internal/capabilities/models
 ```
 
 ## 4) 运行时参数怎么传（最常用）
@@ -171,10 +170,8 @@ curl -sS -X POST http://127.0.0.1:8123/internal/capabilities/resolve -H "Content
 你通常通过 `context` / `configurable` 传：
 
 - `model_id`
-- `enable_local_tools`
-- `local_tools`（例如 `word_count,to_upper`）
-- `enable_local_mcp`
-- `mcp_servers`（例如 `local_math,local_text`）
+- `enable_tools`
+- `tools`（例如 `word_count,to_upper,mcp:local_text`）
 - 可选模型参数：`temperature`、`max_tokens`、`top_p`
 
 说明：`model_provider/model/base_url/api_key` 不需要用户传，统一由 `conf/settings.yaml` 的模型组映射。
@@ -184,10 +181,9 @@ curl -sS -X POST http://127.0.0.1:8123/internal/capabilities/resolve -H "Content
 已暴露在同一服务下：
 
 - `GET /internal/capabilities/tools`
-- `GET /internal/capabilities/mcp-servers`
-- `POST /internal/capabilities/resolve`
+- `GET /internal/capabilities/models`
 
-用途：让外部服务先查询“可用能力”与“本次请求最终会启用哪些能力”。
+用途：让外部服务查询当前“可用能力”清单与“可选模型目录（前端展示名）”。
 
 ## 6) deepagent 的约定（已简化）
 
@@ -209,9 +205,9 @@ curl -sS -X POST http://127.0.0.1:8123/internal/capabilities/resolve -H "Content
 ## 8) 常见问题
 
 - 为什么工具没生效？
-  - 默认关闭，需显式设置 `enable_local_tools=true`。
-- 为什么 MCP 没生效？
-  - 默认关闭，需显式设置 `enable_local_mcp=true`，并传 `mcp_servers`。
+  - 默认关闭，需显式设置 `enable_tools=true`。
+- 为什么 MCP 工具没生效？
+  - 需要在 `tools` 中包含对应 MCP server（例如 `mcp:local_text`），或在 `enable_tools=true` 且不传 `tools` 时使用全量工具池。
 - 为什么只传了 `model_id` 就能跑？
   - 因为模型四元组由 `settings.yaml` 统一映射。
 - 为什么 `request_human_approval` 看起来自动通过，或没有中断？

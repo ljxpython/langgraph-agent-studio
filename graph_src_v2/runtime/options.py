@@ -27,10 +27,8 @@ class AppRuntimeConfig:
     model_id: str | None = None
     model_spec: ModelSpec = field(default_factory=lambda: ModelSpec(model_provider="", model="", base_url="", api_key=""))
     system_prompt: str = DEFAULT_SYSTEM_PROMPT
-    enable_local_tools: bool = False
-    local_tools: list[str] | None = None
-    enable_local_mcp: bool = False
-    mcp_servers: list[str] | None = None
+    enable_tools: bool = False
+    tools: list[str] | None = None
     temperature: float | None = None
     max_tokens: int | None = None
     top_p: float | None = None
@@ -121,27 +119,6 @@ def _split_csv(value: str) -> list[str]:
     return [item.strip() for item in value.split(",") if item.strip()]
 
 
-def _parse_mcp_servers(raw: Any) -> list[str]:
-    if raw is None:
-        return []
-    if isinstance(raw, (list, tuple, set)):
-        values = [str(item).strip() for item in raw if str(item).strip()]
-    elif isinstance(raw, str):
-        values = _split_csv(raw)
-    else:
-        values = [str(raw).strip()]
-
-    normalized: list[str] = []
-    seen: set[str] = set()
-    for item in values:
-        key = item.lower()
-        if key in {"", "none"} or key in seen:
-            continue
-        seen.add(key)
-        normalized.append(key)
-    return normalized
-
-
 def _parse_tool_names(raw: Any) -> list[str] | None:
     if raw is None:
         return None
@@ -202,59 +179,36 @@ def build_runtime_config(
         or os.getenv("SYSTEM_PROMPT")
         or DEFAULT_SYSTEM_PROMPT
     )
-    enable_local_tools = _parse_bool(
-        context_data.get("enable_local_tools")
-        if "enable_local_tools" in context_data
+    enable_tools = _parse_bool(
+        context_data.get("enable_tools")
+        if "enable_tools" in context_data
         else (
-            configurable.get("enable_local_tools")
-            if "enable_local_tools" in configurable
-            else configurable.get("x-enable-local-tools")
-        ),
-        default=False,
-    )
-    raw_local_tools = context_data.get("local_tools")
-    if raw_local_tools is None:
-        raw_local_tools = (
-            configurable.get("local_tools")
-            if "local_tools" in configurable
+            configurable.get("enable_tools")
+            if "enable_tools" in configurable
             else (
-                configurable.get("x-local-tools")
-                if "x-local-tools" in configurable
-                else os.getenv("LOCAL_TOOLS")
-            )
-        )
-    local_tools = _parse_tool_names(raw_local_tools)
-    enable_local_mcp = _parse_bool(
-        context_data.get("enable_local_mcp")
-        if "enable_local_mcp" in context_data
-        else (
-            configurable.get("enable_local_mcp")
-            if "enable_local_mcp" in configurable
-            else (
-                configurable.get("x-enable-local-mcp")
-                if "x-enable-local-mcp" in configurable
-                else os.getenv("ENABLE_LOCAL_MCP")
+                configurable.get("x-enable-tools")
+                if "x-enable-tools" in configurable
+                else os.getenv("ENABLE_TOOLS")
             )
         ),
         default=False,
     )
 
-    raw_servers = context_data.get("mcp_servers")
-    if raw_servers is None:
-        raw_servers = (
-            configurable.get("mcp_servers")
-            if "mcp_servers" in configurable
+    raw_tools = context_data.get("tools")
+    if raw_tools is None:
+        raw_tools = (
+            configurable.get("tools")
+            if "tools" in configurable
             else (
-                configurable.get("x-mcp-servers")
-                if "x-mcp-servers" in configurable
-                else configurable.get("x-mcp-server")
+                configurable.get("x-tools")
+                if "x-tools" in configurable
+                else os.getenv("TOOLS")
             )
         )
-    if raw_servers is None:
-        raw_servers = os.getenv("MCP_SERVERS")
-    mcp_servers = _parse_mcp_servers(raw_servers)
-    if not enable_local_mcp:
-        mcp_servers = []
+
+    tools = _parse_tool_names(raw_tools)
+    if not enable_tools:
+        tools = []
 
     temperature = _parse_float(
         context_data.get("temperature")
@@ -278,10 +232,8 @@ def build_runtime_config(
         model_id=resolved_model_id,
         model_spec=resolved_model_spec,
         system_prompt=system_prompt,
-        enable_local_tools=enable_local_tools,
-        local_tools=local_tools,
-        enable_local_mcp=enable_local_mcp,
-        mcp_servers=mcp_servers,
+        enable_tools=enable_tools,
+        tools=tools,
         temperature=temperature,
         max_tokens=max_tokens,
         top_p=top_p,

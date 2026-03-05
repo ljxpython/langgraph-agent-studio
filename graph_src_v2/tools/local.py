@@ -21,16 +21,16 @@ def to_upper(text: str) -> str:
     return text.upper()
 
 
-_LOCAL_TOOL_REGISTRY: dict[str, Any] = {
+_BUILTIN_TOOL_REGISTRY: dict[str, Any] = {
     "word_count": word_count,
     "utc_now": utc_now,
     "to_upper": to_upper,
 }
 
 
-def get_local_tools(tool_names: list[str] | None = None) -> list[Any]:
+def get_builtin_tools(tool_names: list[str] | None = None) -> list[Any]:
     if tool_names is None:
-        return list(_LOCAL_TOOL_REGISTRY.values())
+        return list(_BUILTIN_TOOL_REGISTRY.values())
 
     selected: list[Any] = []
     seen: set[str] = set()
@@ -38,10 +38,10 @@ def get_local_tools(tool_names: list[str] | None = None) -> list[Any]:
         key = str(raw_name).strip().lower()
         if not key or key in seen:
             continue
-        tool_obj = _LOCAL_TOOL_REGISTRY.get(key)
+        tool_obj = _BUILTIN_TOOL_REGISTRY.get(key)
         if tool_obj is None:
-            allowed = ", ".join(sorted(_LOCAL_TOOL_REGISTRY.keys()))
-            raise ValueError(f"Unsupported local tool '{raw_name}', allowed: {allowed}")
+            allowed = ", ".join(sorted(_BUILTIN_TOOL_REGISTRY.keys()))
+            raise ValueError(f"Unsupported builtin tool '{raw_name}', allowed: {allowed}")
         seen.add(key)
         selected.append(tool_obj)
     return selected

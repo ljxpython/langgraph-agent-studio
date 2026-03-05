@@ -23,8 +23,8 @@ cp graph_src_v2/.env.example graph_src_v2/.env
 可选（按需启用）：
 
 - `SYSTEM_PROMPT`：默认 system prompt
-- `LOCAL_TOOLS`：本地工具白名单（逗号分隔）
-- `ENABLE_LOCAL_MCP` / `MCP_SERVERS`：本地 MCP 开关与 server 列表
+- `ENABLE_TOOLS`：公共工具池总开关
+- `TOOLS`：公共工具白名单（逗号分隔，支持本地工具与 `mcp:<server>`）
 
 若你需要 OAuth 鉴权（Supabase），还需在 `.env` 中准备：
 

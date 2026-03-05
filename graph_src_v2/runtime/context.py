@@ -21,10 +21,8 @@ class RuntimeContext:
     temperature: float | None = None
     max_tokens: int | None = None
     top_p: float | None = None
-    enable_local_tools: bool | None = None
-    local_tools: list[str] | None = None
-    enable_local_mcp: bool | None = None
-    mcp_servers: list[str] | None = None
+    enable_tools: bool | None = None
+    tools: list[str] | None = None
     skills: list[str] | None = None
     subagents: list[dict[str, object]] | None = None
 

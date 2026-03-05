@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import yaml
 
@@ -54,10 +54,48 @@ def _load_settings() -> dict[str, Any]:
 _SETTINGS = _load_settings()
 
 
+class ModelCatalogItem(TypedDict):
+    model_id: str
+    display_name: str
+    is_default: bool
+
+
 def get_default_model_id() -> str:
     default_id = _SETTINGS.get("default_model_id")
     default_id = str(default_id).strip() if default_id is not None else ""
     return default_id or "glm4_mass"
+
+
+def list_model_catalog() -> list[ModelCatalogItem]:
+    default_id = get_default_model_id()
+    all_models = _as_dict(_SETTINGS.get("models"))
+
+    catalog: list[ModelCatalogItem] = []
+    for raw_model_id, raw_value in all_models.items():
+        model_id = str(raw_model_id).strip()
+        if not model_id:
+            continue
+
+        value = _as_dict(raw_value)
+        alias = str(value.get("alias") or "").strip()
+        display_name = alias or model_id
+
+        catalog.append(
+            {
+                "model_id": model_id,
+                "display_name": display_name,
+                "is_default": model_id == default_id,
+            }
+        )
+
+    return sorted(
+        catalog,
+        key=lambda item: (
+            0 if item["is_default"] else 1,
+            item["display_name"].lower(),
+            item["model_id"].lower(),
+        ),
+    )
 
 
 def get_model_spec(model_id: str) -> dict[str, str | None]:
