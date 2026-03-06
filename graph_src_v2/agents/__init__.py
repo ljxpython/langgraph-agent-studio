@@ -1,15 +1,26 @@
-from graph_src_v2.agents.assistant_agent.graph import graph as assistant_graph
-from graph_src_v2.agents.customer_support_agent.graph import graph as customer_support_graph
-from graph_src_v2.agents.deepagent_agent.graph import graph as deepagent_graph
-from graph_src_v2.agents.personal_assistant_agent.graph import graph as personal_assistant_graph
-from graph_src_v2.agents.router_knowledge_base_agent.graph import graph as router_knowledge_base_graph
-from graph_src_v2.agents.skills_sql_assistant_agent.graph import graph as skills_sql_assistant_graph
+from __future__ import annotations
 
-__all__ = [
-    "assistant_graph",
-    "customer_support_graph",
-    "deepagent_graph",
-    "personal_assistant_graph",
-    "router_knowledge_base_graph",
-    "skills_sql_assistant_graph",
-]
+from importlib import import_module
+from typing import Any
+
+_GRAPH_EXPORTS = {
+    "assistant_graph": ("graph_src_v2.agents.assistant_agent.graph", "graph"),
+    "customer_support_graph": ("graph_src_v2.agents.customer_support_agent.graph", "graph"),
+    "deepagent_graph": ("graph_src_v2.agents.deepagent_agent.graph", "graph"),
+    "personal_assistant_graph": ("graph_src_v2.agents.personal_assistant_agent.graph", "graph"),
+    "skills_sql_assistant_graph": ("graph_src_v2.agents.skills_sql_assistant_agent.graph", "graph"),
+}
+
+__all__ = list(_GRAPH_EXPORTS)
+
+
+def __getattr__(name: str) -> Any:
+    target = _GRAPH_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+    module_name, attribute_name = target
+    module = import_module(module_name)
+    value = getattr(module, attribute_name)
+    globals()[name] = value
+    return value
