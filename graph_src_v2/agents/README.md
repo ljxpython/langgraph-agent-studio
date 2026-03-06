@@ -45,7 +45,7 @@ agents/<your_agent>/
 
 ### 3.2 何时保留 StateGraph
 
-- 需要多节点/条件路由/聚合（例如 `router_knowledge_base_agent`）
+- 需要多节点/条件路由/聚合
 - 需要显式状态机流程编排
 - 需要在图层表达复杂分支而不仅是单 agent 调用
 

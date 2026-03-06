@@ -4,7 +4,7 @@
 
 ## 1) 先理解这套最小心智模型
 
-- 图入口：`assistant`、`assistant_entrypoint`、`deepagent_demo`、`graph_patterns_memory_demo`、`personal_assistant_demo`、`customer_support_handoffs_demo`、`router_knowledge_base_demo`、`skills_sql_assistant_demo`
+- 图入口：`assistant`、`assistant_entrypoint`、`deepagent_demo`、`graph_patterns_memory_demo`、`personal_assistant_demo`、`customer_support_handoffs_demo`、`skills_sql_assistant_demo`
 - 运行时配置：`runtime/options.py`（模型、工具、MCP 开关与参数）
 - 模型装配：`runtime/modeling.py`
 - 工具装配：`tools/registry.py`
@@ -55,31 +55,26 @@ curl -sS -X POST http://127.0.0.1:8123/assistants/search -H "Content-Type: appli
 - 核心机制：单 agent + 状态机 step 切换（`warranty_collector` → `issue_classifier` → `resolution_specialist`）
 - 通过 tool 返回 `Command(update=...)` 更新工作流状态，不做过度封装
 
-### 2.3 router_knowledge_base_demo 是什么
-
-- 迁移自 LangChain 官方 `router-knowledge-base` 示例
-- 核心机制：分类路由 -> 并行查询 github/notion/slack 专家 -> 最终综合回答
-- 使用 `StateGraph + Send` 显式并行路由，保持最小实现与可读性
-
-### 2.4 skills_sql_assistant_demo 是什么
+### 2.3 skills_sql_assistant_demo 是什么
 
 - 迁移自 LangChain 官方 `skills-sql-assistant` 示例
+- 工厂期按 `configurable.model_id` 选择模型；运行期按 `configurable.enable_tools/tools` 通过 `build_tools(options)` 装配平台工具池
 - 核心机制：通过 middleware 暴露 skills 摘要，按需用 `load_skill` 加载详细 schema/业务规则
 - 目标：减少上下文冗余（progressive disclosure），保持单 agent 对话体验
 
-### 2.5 deepagent_demo（已并入数据分析能力）
+### 2.4 deepagent_demo（已并入数据分析能力）
 
 - 统一保留 `deepagent_demo`，移除单独的 `deepagents_data_analysis_demo` 教学变体
 - 既支持通用 deep task 分解，也支持本地 CSV 分析、脚本化处理、可视化产物输出
 - 默认不使用 Slack 或任何聊天投递集成，仅回报本地产物路径
 
-### 2.6 assistant（LangChain 概念教学模式）
+### 2.5 assistant（LangChain 概念教学模式）
 
 - 在原有 assistant 基础上默认开启 LangChain 概念教学能力（无需额外开关）
 - 覆盖三类核心知识点：`tools 调用`、`人机交互（interrupt 审批）`、`多智能体（tool-wrapped subagents）`
 - 开启后会注入 `ask_knowledge_specialist` / `ask_ops_specialist` / `ask_email_specialist` / `request_human_approval` 四类演示工具
 
-### 2.7 assistant 前端验证场景（默认可用）
+### 2.6 assistant 前端验证场景（默认可用）
 
 以下场景直接在前端对 `assistant` 发送消息即可，不需要额外配置：
 
@@ -103,7 +98,7 @@ curl -sS -X POST http://127.0.0.1:8123/assistants/search -H "Content-Type: appli
    - 示例输入：`准备向全员发送“今晚停机”的邮件，先申请人工审批。`
    - 预期：若前端选择 reject，最终回复会明确动作被拒绝，并停止后续高风险操作。
 
-### 2.8 graph_patterns_memory_demo（综合 Graph 开发样例）
+### 2.7 graph_patterns_memory_demo（综合 Graph 开发样例）
 
 - 目标：一个 demo 同时覆盖 `tools`、`人机审批 HITL`、`多智能体`、`子图`、`长期记忆`
 - 子图：父图中通过 `add_node("run_specialists_subgraph", specialist_subgraph)` 挂载已编译子图
@@ -111,7 +106,7 @@ curl -sS -X POST http://127.0.0.1:8123/assistants/search -H "Content-Type: appli
 - 多智能体：supervisor 通过 `ask_knowledge_specialist` / `ask_ops_specialist` 工具代理子 agent
 - HITL：按官方 `langgraph/interrupts` 模式在父图节点直接调用 `interrupt(...)`，前端可直接收到评审中断（approve/edit/reject）
 
-### 2.9 graph_patterns_memory_demo 前端触发语句（可直接复制）
+### 2.8 graph_patterns_memory_demo 前端触发语句（可直接复制）
 
 以下语句可直接在前端对 `graph_patterns_memory_demo` 发送：
 
@@ -139,7 +134,7 @@ curl -sS -X POST http://127.0.0.1:8123/assistants/search -H "Content-Type: appli
 - edit: `{ "decisions": [{"type":"edit","edited_action":{"name":"send_demo_email","args":{"to":["ops@example.com"],"subject":"变更通知-灰度5%","body":"先灰度5%，10分钟观察后再放量"}}}] }`
 - reject: `{ "decisions": [{"type":"reject","message":"今晚冻结发布，请改为明早执行"}] }`
 
-### 2.10 HITL 选型说明（create_agent vs StateGraph）
+### 2.9 HITL 选型说明（create_agent vs StateGraph）
 
 - `create_agent`（LangChain agent 直跑场景）推荐 `HumanInTheLoopMiddleware`：
   - 由 middleware 自动拦截工具调用并产出标准 HITL interrupt。

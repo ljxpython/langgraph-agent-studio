@@ -25,10 +25,6 @@
       "path": "./graph_src_v2/agents/personal_assistant_agent/graph.py:graph",
       "description": "个人助理演示：calendar/email 子代理协同，由 supervisor 统一调度。"
     },
-    "router_knowledge_base_demo": {
-      "path": "./graph_src_v2/agents/router_knowledge_base_agent/graph.py:graph",
-      "description": "知识库路由演示：按查询分类并行调用 GitHub/Notion/Slack 专家后综合回答。"
-    },
     "skills_sql_assistant_demo": {
       "path": "./graph_src_v2/agents/skills_sql_assistant_agent/graph.py:graph",
       "description": "SQL 技能助手演示：middleware 注入技能目录，按需 load_skill 加载 schema 与业务规则。"
