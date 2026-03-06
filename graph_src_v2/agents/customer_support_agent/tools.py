@@ -1,10 +1,11 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Literal, cast
+from collections.abc import Awaitable, Callable
+from typing import Any, Literal, cast
 
 from langchain.agents import AgentState, create_agent
-from langchain.agents.middleware import ModelRequest, ModelResponse, wrap_model_call
-from langchain.messages import ToolMessage
+from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
+from langchain.messages import SystemMessage, ToolMessage
 from langchain_core.tools import tool
 from langchain.tools import ToolRuntime
 from langgraph.types import Command
@@ -88,41 +89,53 @@ STEP_CONFIG: dict[SupportStep, dict[str, Any]] = {
 }
 
 
-@wrap_model_call
-def apply_step_config(
-    request: ModelRequest,
-    handler: Callable[[ModelRequest], ModelResponse],
-) -> ModelResponse:
-    current_step = request.state.get("current_step", "warranty_collector")
-    step = str(current_step)
-    if step not in STEP_CONFIG:
-        raise ValueError(f"Unknown support step: {step}")
+class StepMiddleware(AgentMiddleware):
+    @staticmethod
+    def _apply_step_config(request: ModelRequest) -> ModelRequest:
+        current_step = request.state.get("current_step", "warranty_collector")
+        step = str(current_step)
+        if step not in STEP_CONFIG:
+            raise ValueError(f"Unknown support step: {step}")
 
-    config = cast(dict[str, Any], STEP_CONFIG[cast(SupportStep, step)])
-    for key in config["requires"]:
-        if request.state.get(key) is None:
-            raise ValueError(f"{key} must be set before reaching {step}")
+        config = cast(dict[str, Any], STEP_CONFIG[cast(SupportStep, step)])
+        for key in config["requires"]:
+            if request.state.get(key) is None:
+                raise ValueError(f"{key} must be set before reaching {step}")
 
-    system_prompt = str(config["prompt"]).format(**request.state)
-    return handler(
-        request.override(
-            system_prompt=system_prompt,
+        system_prompt = str(config["prompt"]).format(**request.state)
+        return request.override(
+            system_message=SystemMessage(content=system_prompt),
             tools=list(config["tools"]),
         )
-    )
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        return handler(self._apply_step_config(request))
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelResponse:
+        return await handler(self._apply_step_config(request))
 
 
-def build_customer_support_agent(model: Any) -> Any:
+def build_customer_support_agent(model: Any, base_tools: list[Any] | None = None) -> Any:
     all_tools = [
         record_warranty_status,
         record_issue_type,
         provide_solution,
         escalate_to_human,
     ]
+    tools = list(base_tools or [])
+    tools.extend(all_tools)
     return create_agent(
         model=model,
-        tools=all_tools,
+        tools=tools,
         state_schema=SupportState,
-        middleware=[apply_step_config],
+        middleware=[StepMiddleware()],
         name="customer_support_handoff_demo",
     )
