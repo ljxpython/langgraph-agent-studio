@@ -69,7 +69,7 @@ def _message_to_text(message: Any) -> str:
     return str(message)
 
 
-def build_personal_assistant_agent(model: Any) -> Any:
+def build_personal_assistant_agent(model: Any, base_tools: list[Any] | None = None) -> Any:
     calendar_agent = create_agent(
         model=model,
         tools=[create_calendar_event, get_available_time_slots],
@@ -94,9 +94,12 @@ def build_personal_assistant_agent(model: Any) -> Any:
         result = email_agent.invoke({"messages": [{"role": "user", "content": request}]})
         return _message_to_text(result["messages"][-1])
 
+    tools = list(base_tools or [])
+    tools.extend([schedule_event, manage_email])
+
     return create_agent(
         model=model,
-        tools=[schedule_event, manage_email],
+        tools=tools,
         system_prompt=SUPERVISOR_PROMPT,
         name="personal_assistant_supervisor",
     )

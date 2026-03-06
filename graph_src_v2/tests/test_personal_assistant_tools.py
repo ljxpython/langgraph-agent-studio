@@ -62,6 +62,28 @@ def test_message_to_text_handles_rich_content() -> None:
     assert pa_tools._message_to_text(rich_message) == "line1\nline2"
 
 
+def test_build_personal_assistant_agent_accepts_base_tools() -> None:
+    captured: list[dict[str, Any]] = []
+
+    def fake_create_agent(**kwargs: Any) -> dict[str, Any]:
+        captured.append(kwargs)
+        return {"name": kwargs.get("name"), "tools": kwargs.get("tools", [])}
+
+    original = pa_tools.create_agent
+    pa_tools.create_agent = fake_create_agent
+    try:
+        extra_tool = object()
+        result = pa_tools.build_personal_assistant_agent(model=object(), base_tools=[extra_tool])
+    finally:
+        pa_tools.create_agent = original
+
+    assert len(captured) == 3
+    supervisor_call = captured[-1]
+    assert supervisor_call["name"] == "personal_assistant_supervisor"
+    assert extra_tool in supervisor_call["tools"]
+    assert len(result["tools"]) == 3
+
+
 def test_langgraph_registers_personal_assistant_demo() -> None:
     langgraph_file = _PROJECT_ROOT / "graph_src_v2" / "langgraph.json"
     data = json.loads(langgraph_file.read_text(encoding="utf-8"))
