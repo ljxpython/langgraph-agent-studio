@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import sys
 from pathlib import Path
 from typing import Any
+
+from langchain.agents.middleware import ModelRequest, ModelResponse
+from langchain.messages import AIMessage, SystemMessage
 
 
 _PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -34,6 +38,46 @@ def test_load_skill_unknown() -> None:
 def test_skill_middleware_registers_load_tool() -> None:
     middleware = sql_tools.SkillMiddleware()
     assert sql_tools.load_skill in middleware.tools
+
+
+def test_skill_middleware_wrap_model_call_adds_skill_catalog() -> None:
+    middleware = sql_tools.SkillMiddleware()
+    request = ModelRequest(
+        model=object(),
+        messages=[],
+        system_message=SystemMessage(content="Base prompt"),
+    )
+
+    def handler(updated_request: ModelRequest) -> ModelResponse:
+        system_prompt = updated_request.system_prompt or ""
+        assert "Base prompt" in system_prompt
+        assert "## Available Skills" in system_prompt
+        assert "sales_analytics" in system_prompt
+        return ModelResponse(result=[AIMessage(content="ok")])
+
+    response = middleware.wrap_model_call(request, handler)
+
+    assert response.result[0].text == "ok"
+
+
+def test_skill_middleware_awrap_model_call_adds_skill_catalog() -> None:
+    middleware = sql_tools.SkillMiddleware()
+    request = ModelRequest(
+        model=object(),
+        messages=[],
+        system_message=SystemMessage(content="Base prompt"),
+    )
+
+    async def handler(updated_request: ModelRequest) -> ModelResponse:
+        system_prompt = updated_request.system_prompt or ""
+        assert "Base prompt" in system_prompt
+        assert "## Available Skills" in system_prompt
+        assert "inventory_management" in system_prompt
+        return ModelResponse(result=[AIMessage(content="ok")])
+
+    response = asyncio.run(middleware.awrap_model_call(request, handler))
+
+    assert response.result[0].text == "ok"
 
 
 def test_build_skills_sql_assistant_agent_runnable() -> None:

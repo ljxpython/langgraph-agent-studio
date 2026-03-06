@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Callable, TypedDict
+from collections.abc import Awaitable, Callable
+from typing import Any, TypedDict
 
 from langchain.agents import create_agent
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
@@ -67,24 +68,36 @@ class SkillMiddleware(AgentMiddleware):
         lines = [f"- {item['name']}: {item['description']}" for item in SKILLS]
         self._skills_prompt = "\n".join(lines)
 
-    def wrap_model_call(
-        self,
-        request: ModelRequest,
-        handler: Callable[[ModelRequest], ModelResponse],
-    ) -> ModelResponse:
+    def _with_skill_system_message(self, request: ModelRequest) -> ModelRequest:
         addendum = (
             "\n\n## Available Skills\n"
             f"{self._skills_prompt}\n\n"
             "Use load_skill when you need schema and business rules for a skill."
         )
-        new_content = list(request.system_message.content_blocks) + [{"type": "text", "text": addendum}]
-        new_system_message = SystemMessage(content=new_content)
-        return handler(request.override(system_message=new_system_message))
+        existing_prompt = request.system_prompt or ""
+        new_system_message = SystemMessage(content=f"{existing_prompt}{addendum}")
+        return request.override(system_message=new_system_message)
+
+    def wrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], ModelResponse],
+    ) -> ModelResponse:
+        return handler(self._with_skill_system_message(request))
+
+    async def awrap_model_call(
+        self,
+        request: ModelRequest,
+        handler: Callable[[ModelRequest], Awaitable[ModelResponse]],
+    ) -> ModelResponse:
+        return await handler(self._with_skill_system_message(request))
 
 
-def build_skills_sql_assistant_agent(model: Any) -> Any:
+def build_skills_sql_assistant_agent(model: Any, base_tools: list[Any] | None = None) -> Any:
+    tools = list(base_tools or [])
     return create_agent(
         model=model,
+        tools=tools,
         system_prompt=SQL_ASSISTANT_SYSTEM_PROMPT,
         middleware=[SkillMiddleware()],
         name="skills_sql_assistant_demo",
