@@ -1,5 +1,5 @@
 from graph_src_v2.runtime.context import RuntimeContext
-from graph_src_v2.runtime.modeling import apply_model_runtime_params, resolve_model
+from graph_src_v2.runtime.modeling import apply_model_runtime_params, resolve_model, resolve_model_by_id
 from graph_src_v2.runtime.options import (
     AppRuntimeConfig,
     DEFAULT_SYSTEM_PROMPT,
@@ -20,5 +20,6 @@ __all__ = [
     "merge_trusted_auth_context",
     "read_configurable",
     "resolve_model",
+    "resolve_model_by_id",
     "apply_model_runtime_params",
 ]

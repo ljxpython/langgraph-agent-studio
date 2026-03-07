@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 from langchain.chat_models import init_chat_model
 from langchain_core.language_models.chat_models import BaseChatModel
 
+from graph_src_v2.conf.settings import require_model_spec
 from graph_src_v2.runtime.options import AppRuntimeConfig, ModelSpec
 
 
@@ -43,6 +45,18 @@ def resolve_model(model_spec: ModelSpec) -> BaseChatModel:
         model=model,
         api_key=key,
         base_url=normalized_base_url,
+    )
+
+
+@lru_cache(maxsize=16)
+def resolve_model_by_id(model_id: str) -> BaseChatModel:
+    resolved_id, model_spec = require_model_spec(model_id)
+    del resolved_id
+    return _init_chat_model(
+        model_provider=model_spec["model_provider"],
+        model=model_spec["model"],
+        api_key=model_spec["api_key"],
+        base_url=model_spec["base_url"],
     )
 
 
