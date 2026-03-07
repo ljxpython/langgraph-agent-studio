@@ -10,6 +10,7 @@ from graph_src_v2.agents.personal_assistant_agent.prompts import (
     EMAIL_AGENT_PROMPT,
     SUPERVISOR_PROMPT,
 )
+from graph_src_v2.middlewares.multimodal import MultimodalAgentState, MultimodalMiddleware
 
 
 @tool("create_calendar_event", description="Create a calendar event with ISO datetime inputs.")
@@ -101,5 +102,7 @@ def build_personal_assistant_agent(model: Any, base_tools: list[Any] | None = No
         model=model,
         tools=tools,
         system_prompt=SUPERVISOR_PROMPT,
+        state_schema=MultimodalAgentState,
+        middleware=[MultimodalMiddleware()],
         name="personal_assistant_supervisor",
     )

@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any, Literal, cast
 
-from langchain.agents import AgentState, create_agent
+from langchain.agents import create_agent
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
 from langchain.messages import SystemMessage, ToolMessage
 from langchain_core.tools import tool
@@ -16,13 +16,14 @@ from graph_src_v2.agents.customer_support_agent.prompts import (
     RESOLUTION_SPECIALIST_PROMPT,
     WARRANTY_COLLECTOR_PROMPT,
 )
+from graph_src_v2.middlewares.multimodal import MultimodalAgentState, MultimodalMiddleware
 
 SupportStep = Literal["warranty_collector", "issue_classifier", "resolution_specialist"]
 WarrantyStatus = Literal["in_warranty", "out_of_warranty"]
 IssueType = Literal["hardware", "software"]
 
 
-class SupportState(AgentState):
+class SupportState(MultimodalAgentState):
     current_step: NotRequired[SupportStep]
     warranty_status: NotRequired[WarrantyStatus]
     issue_type: NotRequired[IssueType]
@@ -136,6 +137,6 @@ def build_customer_support_agent(model: Any, base_tools: list[Any] | None = None
         model=model,
         tools=tools,
         state_schema=SupportState,
-        middleware=[StepMiddleware()],
+        middleware=[StepMiddleware(), MultimodalMiddleware()],
         name="customer_support_handoff_demo",
     )

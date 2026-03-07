@@ -9,6 +9,7 @@ from langchain.messages import SystemMessage
 from langchain_core.tools import tool
 
 from graph_src_v2.agents.skills_sql_assistant_agent.prompts import SQL_ASSISTANT_SYSTEM_PROMPT
+from graph_src_v2.middlewares.multimodal import MultimodalAgentState, MultimodalMiddleware
 
 
 class Skill(TypedDict):
@@ -99,6 +100,7 @@ def build_skills_sql_assistant_agent(model: Any, base_tools: list[Any] | None = 
         model=model,
         tools=tools,
         system_prompt=SQL_ASSISTANT_SYSTEM_PROMPT,
-        middleware=[SkillMiddleware()],
+        state_schema=MultimodalAgentState,
+        middleware=[SkillMiddleware(), MultimodalMiddleware()],
         name="skills_sql_assistant_demo",
     )
