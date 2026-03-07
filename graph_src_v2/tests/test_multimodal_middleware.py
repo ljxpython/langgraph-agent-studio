@@ -249,6 +249,7 @@ def test_extract_pdf_text_from_base64_payload() -> None:
     assert "Hello PDF" in text
     assert metadata is not None
     assert metadata["page_count"] == 1
+    assert metadata["extraction"] == "pymupdf4llm_markdown"
 
 
 def test_multimodal_summary_not_reinjected_on_follow_up_text_turn() -> None:

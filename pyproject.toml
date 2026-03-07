@@ -9,7 +9,6 @@ dependencies = [
     "langchain-community>=0.4.1",
     "langchain-mcp-adapters>=0.2.1",
     "langgraph>=1.0.9",
-    "pypdf>=6.7.3",
     "langgraph-cli[inmem]>=0.4.12",
     "deepagents>=0.4.4",
     "langchain-deepseek>=1.0.1",
@@ -20,4 +19,5 @@ dependencies = [
     "langgraph-checkpoint-postgres>=3.0.4",
     "psycopg[binary]>=3.3.3",
     "langchain-openai>=1.1.10",
+    "pymupdf4llm>=0.3.4",
 ]

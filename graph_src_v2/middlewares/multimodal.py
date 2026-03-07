@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import base64
-import io
+import importlib
 import json
 import re
 from collections.abc import Awaitable, Callable, Mapping, Sequence
@@ -10,7 +10,6 @@ from typing import Any, Literal, cast
 from langchain.agents import AgentState
 from langchain.agents.middleware import AgentMiddleware, ModelRequest, ModelResponse
 from langchain.messages import HumanMessage, SystemMessage
-from pypdf import PdfReader
 from typing_extensions import NotRequired, TypedDict
 
 from graph_src_v2.runtime.modeling import resolve_model_by_id
@@ -369,7 +368,7 @@ def _build_parser_prompt(artifact: AttachmentArtifact) -> str:
     if kind == "image":
         task = "请分析这张图片，提取可见文字，并给出对后续对话最有价值的简要摘要。"
     elif kind == "pdf":
-        task = "请阅读这个 PDF，提取关键文本并给出简要摘要。如果是扫描件，请尽量做 OCR。"
+        task = "请阅读这个 PDF，基于已抽取出的文档文本与结构信息给出简要摘要。"
     else:
         task = "请分析这个文件，并给出对后续对话最有价值的简要摘要。"
     return (
@@ -399,24 +398,69 @@ def _extract_pdf_text(block: Mapping[str, Any]) -> tuple[str | None, dict[str, A
         return None, {"page_count": 0, "extraction": "invalid_base64"}
 
     try:
-        reader = PdfReader(io.BytesIO(raw_bytes))
+        pymupdf = importlib.import_module("pymupdf")
+        pymupdf4llm = importlib.import_module("pymupdf4llm")
+    except ModuleNotFoundError:
+        return None, {"page_count": 0, "extraction": "missing_pymupdf4llm_dependency"}
+
+    try:
+        doc = pymupdf.open(stream=raw_bytes, filetype="pdf")
     except Exception:
-        return None, {"page_count": 0, "extraction": "reader_error"}
+        return None, {"page_count": 0, "extraction": "document_open_error"}
+
+    try:
+        chunks = cast(
+            list[dict[str, Any]],
+            pymupdf4llm.to_markdown(
+                doc,
+                page_chunks=True,
+                ignore_images=True,
+                ignore_graphics=False,
+                force_text=True,
+            ),
+        )
+    except Exception:
+        return None, {"page_count": doc.page_count, "extraction": "pymupdf4llm_error"}
+    finally:
+        doc.close()
 
     parts: list[str] = []
-    for page in reader.pages:
-        try:
-            page_text = page.extract_text() or ""
-        except Exception:
-            page_text = ""
-        if page_text.strip():
+    total_tables = 0
+    total_images = 0
+    toc_items: list[Any] = []
+    document_metadata: Mapping[str, Any] | None = None
+    for chunk in chunks:
+        if document_metadata is None and isinstance(chunk.get("metadata"), Mapping):
+            document_metadata = cast(Mapping[str, Any], chunk["metadata"])
+        page_text = chunk.get("text")
+        if isinstance(page_text, str) and page_text.strip():
             parts.append(page_text.strip())
+        tables = chunk.get("tables")
+        if isinstance(tables, list):
+            total_tables += len(tables)
+        images = chunk.get("images")
+        if isinstance(images, list):
+            total_images += len(images)
+        chunk_toc_items = chunk.get("toc_items")
+        if isinstance(chunk_toc_items, list) and chunk_toc_items:
+            toc_items.extend(chunk_toc_items)
 
     text = "\n\n".join(parts).strip()
+    page_count = len(chunks)
     metadata = {
-        "page_count": len(reader.pages),
-        "extraction": "text" if text else "empty_text",
+        "page_count": page_count,
+        "extraction": "pymupdf4llm_markdown" if text else "pymupdf4llm_empty_text",
+        "tables_count": total_tables,
+        "images_count": total_images,
+        "toc_items": toc_items,
     }
+    if document_metadata is not None:
+        title = document_metadata.get("title")
+        if isinstance(title, str) and title.strip():
+            metadata["title"] = title.strip()
+        author = document_metadata.get("author")
+        if isinstance(author, str) and author.strip():
+            metadata["author"] = author.strip()
     return (text or None), metadata
 
 
