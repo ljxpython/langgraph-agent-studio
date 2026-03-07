@@ -42,6 +42,7 @@ curl -sS -X POST http://127.0.0.1:8123/assistants/search -H "Content-Type: appli
 - `03-agent-development-playbook.md`：团队智能体开发规范（模式选型、工具装配、工厂函数、HITL、验证流程）。
 - `04-agent-scaffold-templates.md`：可复制脚手架模板（create_agent / StateGraph / deepagent）。
 - `05-template-to-runnable-agent-10min.md`：从模板到可运行 agent 的 10 分钟实操示例（含注册与最小测试）。
+- `06-multimodal-middleware-design.md`：多模态中间件设计草案（为什么放中间层、为什么增强不覆盖、image/pdf/doc 的分流原则、state/context/message/metadata 的职责边界）。
 
 ### 2.1 personal_assistant_demo 是什么
 
