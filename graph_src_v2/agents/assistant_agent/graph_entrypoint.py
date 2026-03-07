@@ -14,6 +14,7 @@ from graph_src_v2.agents.assistant_agent.tools import (
     lookup_internal_knowledge,
     send_demo_email,
 )
+from graph_src_v2.middlewares.multimodal import MultimodalAgentState, MultimodalMiddleware
 from graph_src_v2.runtime.modeling import apply_model_runtime_params, resolve_model
 from graph_src_v2.runtime.options import build_runtime_config, merge_trusted_auth_context
 from graph_src_v2.tools.registry import build_tools
@@ -47,7 +48,8 @@ async def make_graph(config: RunnableConfig, runtime: ServerRuntime) -> Any:
                 }
             },
             description_prefix="Tool execution pending approval",
-        )
+        ),
+        MultimodalMiddleware(),
     ]
 
     return create_agent(
@@ -55,5 +57,6 @@ async def make_graph(config: RunnableConfig, runtime: ServerRuntime) -> Any:
         tools=tools,
         middleware=middleware,
         system_prompt=options.system_prompt,
+        state_schema=MultimodalAgentState,
         name="assistant_entrypoint",
     )

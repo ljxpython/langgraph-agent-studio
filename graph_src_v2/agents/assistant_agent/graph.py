@@ -8,6 +8,7 @@ from langgraph_sdk.runtime import ServerRuntime
 
 from graph_src_v2.agents.assistant_agent.prompts import resolve_assistant_system_prompt
 from graph_src_v2.agents.assistant_agent.tools import build_assistant_tools, build_langchain_concepts_demo_tools
+from graph_src_v2.middlewares.multimodal import MultimodalAgentState, MultimodalMiddleware
 from graph_src_v2.runtime.context import RuntimeContext
 from graph_src_v2.runtime.modeling import apply_model_runtime_params, resolve_model
 from graph_src_v2.runtime.options import build_runtime_config, merge_trusted_auth_context
@@ -27,8 +28,9 @@ async def make_graph(config: RunnableConfig, runtime: ServerRuntime) -> Any:
     return create_agent(
         model=model,
         tools=tools,
-        middleware=[],
+        middleware=[MultimodalMiddleware()],
         system_prompt=resolve_assistant_system_prompt(options.system_prompt, demo_enabled),
+        state_schema=MultimodalAgentState,
         context_schema=RuntimeContext,
         name="assistant",
     )

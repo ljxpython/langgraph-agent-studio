@@ -11,6 +11,7 @@ from langgraph_sdk.runtime import ServerRuntime
 
 from graph_src_v2.agents.deepagent_agent.prompts import SYSTEM_PROMPT
 from graph_src_v2.agents.deepagent_agent.tools import list_deepagent_skills, list_subagents
+from graph_src_v2.middlewares.multimodal import MultimodalMiddleware
 from graph_src_v2.runtime.context import RuntimeContext
 from graph_src_v2.runtime.modeling import apply_model_runtime_params, resolve_model
 from graph_src_v2.runtime.options import build_runtime_config, merge_trusted_auth_context
@@ -32,6 +33,7 @@ async def make_graph(config: RunnableConfig, runtime: ServerRuntime) -> Any:
         name="deepagent-demo",
         model=model,
         tools=tools,
+        middleware=[MultimodalMiddleware()],
         system_prompt=options.system_prompt or SYSTEM_PROMPT,
         backend=FilesystemBackend(root_dir=str(ROOT_DIR), virtual_mode=False),
         skills=list_deepagent_skills(),
