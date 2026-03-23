@@ -1,5 +1,12 @@
 # langgraph-agent-studio
 
+## 仓库状态说明
+
+- `langgraph_open_teach/` 中这套偏企业级落地的 LangGraph 开发与集成方案，已经整合到 [ai-agent-test-platform](https://github.com/ljxpython/ai-agent-test-platform)。
+- 当前目录下这个拆分项目保留为历史样例与文档参考，已经不再继续维护。
+- 如果你现在要做正式项目、平台化集成或企业级能力扩展，建议直接迁移到 `ai-agent-test-platform`。
+- 下方内容主要用于复盘这份历史项目的本地配置与启动方式。
+
 ## 0) 前置说明（必读）
 
 本项目运行前需要先把两处配置准备好：
